@@ -184,7 +184,7 @@ if (typeof($$.require) == "undefined") {
     $$.requireBundle("init");
 
     if (weAreInbrowser) {
-        $$.log("Defining global require in browser");
+        console.log("Defining global require in browser");
 
 
         global.require = function (request) {
@@ -246,7 +246,7 @@ if (typeof($$.require) == "undefined") {
         const Module = require('module');
         $$.__runtimeModules["module"] = Module;
 
-        $$.log("Redefining require for node");
+        console.log("Redefining require for node");
 
         $$.__originalRequire = Module._load;
         const moduleOriginalRequire = Module.prototype.require;
