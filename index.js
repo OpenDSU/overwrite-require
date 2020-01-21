@@ -61,7 +61,7 @@ if (typeof(global.functionUndefined) == "undefined") {
 }
 
 const weAreInbrowser = (typeof ($$.browserRuntime) != "undefined");
-const weAreInSandbox = (typeof global.require !== 'undefined');
+const weAreInSandbox = global.sandboxEnvironment || false;
 
 
 const pastRequests = {};
