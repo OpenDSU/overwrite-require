@@ -2,188 +2,176 @@
  require and $$.require are overwriting the node.js defaults in loading modules for increasing security, speed and making it work to the privatesky runtime build with browserify.
  The privatesky code for domains should work in node and browsers.
  */
+function enableForEnvironment(envType){
 
-/**
- * @classdesc Interface for $$ object
- *
- * @name $$
- * @class
- *
- */
+    const moduleConstants = require("./moduleConstants");
 
-if (typeof(window) !== "undefined") {
-    global = window;
-}
-
-
-if (typeof(global.$$) == "undefined") {
     /**
+     * @classdesc Interface for $$ object
      *
-     * @type {$$}
+     * @name $$
+     * @class
+     *
      */
-    global.$$ = {};
-    $$.__global = {};
-}
 
-if (typeof($$.__global) == "undefined") {
-    $$.__global = {};
-}
-
-if (typeof($$.__global.requireLibrariesNames) == "undefined") {
-    $$.__global.currentLibraryName = null;
-    $$.__global.requireLibrariesNames = {};
-}
+    if (typeof(window) !== "undefined") {
+        global = window;
+    }
 
 
-if (typeof($$.__runtimeModules) == "undefined") {
-    $$.__runtimeModules = {};
-}
+    if (typeof(global.$$) == "undefined") {
+        /**
+         *
+         * @type {$$}
+         */
+        global.$$ = {};
+        $$.__global = {};
+    }
+
+    if (typeof($$.__global) == "undefined") {
+        $$.__global = {};
+    }
+
+    Object.defineProperty($$, "environmentType", {
+        get: function(){
+            return envType;
+        },
+        set: function (value) {
+            throw Error("Environment type already set!");
+        }
+    });
+
+
+    if (typeof($$.__global.requireLibrariesNames) == "undefined") {
+        $$.__global.currentLibraryName = null;
+        $$.__global.requireLibrariesNames = {};
+    }
+
+
+    if (typeof($$.__runtimeModules) == "undefined") {
+        $$.__runtimeModules = {};
+    }
 
 //todo: why do we need this to be loaded here? :-?
 //require("./../standardGlobalSymbols");
 
-if (typeof(global.functionUndefined) == "undefined") {
-    global.functionUndefined = function () {
-        console.log("Called of an undefined function!!!!");
-        throw new Error("Called of an undefined function");
-    };
-    if (typeof(global.webshimsRequire) == "undefined") {
-        global.webshimsRequire = global.functionUndefined;
+    if (typeof(global.functionUndefined) == "undefined") {
+        global.functionUndefined = function () {
+            console.log("Called of an undefined function!!!!");
+            throw new Error("Called of an undefined function");
+        };
+        if (typeof(global.webshimsRequire) == "undefined") {
+            global.webshimsRequire = global.functionUndefined;
+        }
+
+        if (typeof(global.domainRequire) == "undefined") {
+            global.domainRequire = global.functionUndefined;
+        }
+
+        if (typeof(global.pskruntimeRequire) == "undefined") {
+            global.pskruntimeRequire = global.functionUndefined;
+        }
     }
 
-    if (typeof(global.domainRequire) == "undefined") {
-        global.domainRequire = global.functionUndefined;
+    const pastRequests = {};
+
+    function preventRecursiveRequire(request) {
+        if (pastRequests[request]) {
+            const err = new Error("Preventing recursive require for " + request);
+            err.type = "PSKIgnorableError";
+            throw err;
+        }
+
     }
 
-    if (typeof(global.pskruntimeRequire) == "undefined") {
-        global.pskruntimeRequire = global.functionUndefined;
-    }
-}
-
-const weAreInbrowser = (typeof ($$.browserRuntime) != "undefined");
-const weAreInSandbox = global.sandboxEnvironment || false;
-
-
-const pastRequests = {};
-
-function preventRecursiveRequire(request) {
-    if (pastRequests[request]) {
-        const err = new Error("Preventing recursive require for " + request);
-        err.type = "PSKIgnorableError";
-        throw err;
+    function disableRequire(request) {
+        pastRequests[request] = true;
     }
 
-}
-
-function disableRequire(request) {
-    pastRequests[request] = true;
-}
-
-function enableRequire(request) {
-    pastRequests[request] = false;
-}
-
-
-function requireFromCache(request) {
-    const existingModule = $$.__runtimeModules[request];
-    return existingModule;
-}
-
-function wrapStep(callbackName) {
-    const callback = global[callbackName];
-
-    if (callback === undefined) {
-        return null;
+    function enableRequire(request) {
+        pastRequests[request] = false;
     }
 
-    if (callback === global.functionUndefined) {
-        return null;
+    function requireFromCache(request) {
+        const existingModule = $$.__runtimeModules[request];
+        return existingModule;
     }
 
-    return function (request) {
-        const result = callback(request);
-        $$.__runtimeModules[request] = result;
+    function wrapStep(callbackName) {
+        const callback = global[callbackName];
+
+        if (callback === undefined) {
+            return null;
+        }
+
+        if (callback === global.functionUndefined) {
+            return null;
+        }
+
+        return function (request) {
+            const result = callback(request);
+            $$.__runtimeModules[request] = result;
+            return result;
+        }
+    }
+
+
+    function tryRequireSequence(originalRequire, request) {
+        let arr;
+        if (originalRequire) {
+            arr = $$.__requireFunctionsChain.slice();
+            arr.push(originalRequire);
+        } else {
+            arr = $$.__requireFunctionsChain;
+        }
+
+        preventRecursiveRequire(request);
+        disableRequire(request);
+        let result;
+        const previousRequire = $$.__global.currentLibraryName;
+        let previousRequireChanged = false;
+
+        if (!previousRequire) {
+            // console.log("Loading library for require", request);
+            $$.__global.currentLibraryName = request;
+
+            if (typeof $$.__global.requireLibrariesNames[request] == "undefined") {
+                $$.__global.requireLibrariesNames[request] = {};
+                //$$.__global.requireLibrariesDescriptions[request]   = {};
+            }
+            previousRequireChanged = true;
+        }
+        for (let i = 0; i < arr.length; i++) {
+            const func = arr[i];
+            try {
+
+                if (func === global.functionUndefined) continue;
+                result = func(request);
+
+                if (result) {
+                    break;
+                }
+
+            } catch (err) {
+                if (err.type !== "PSKIgnorableError") {
+                    $$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
+                }
+            }
+        }
+
+        if (!result) {
+            $$.log("Failed to load module ", request, result);
+        }
+
+        enableRequire(request);
+        if (previousRequireChanged) {
+            //console.log("End loading library for require", request, $$.__global.requireLibrariesNames[request]);
+            $$.__global.currentLibraryName = null;
+        }
         return result;
     }
-}
 
-function tryRequireSequence(originalRequire, request) {
-    let arr;
-    if (originalRequire) {
-        arr = $$.__requireFunctionsChain.slice();
-        arr.push(originalRequire);
-    } else {
-        arr = $$.__requireFunctionsChain;
-    }
-
-    preventRecursiveRequire(request);
-    disableRequire(request);
-    let result;
-    const previousRequire = $$.__global.currentLibraryName;
-    let previousRequireChanged = false;
-
-    if (!previousRequire) {
-        // console.log("Loading library for require", request);
-        $$.__global.currentLibraryName = request;
-
-        if (typeof $$.__global.requireLibrariesNames[request] == "undefined") {
-            $$.__global.requireLibrariesNames[request] = {};
-            //$$.__global.requireLibrariesDescriptions[request]   = {};
-        }
-        previousRequireChanged = true;
-    }
-    for (let i = 0; i < arr.length; i++) {
-        const func = arr[i];
-        try {
-
-            if (func === global.functionUndefined) continue;
-            result = func(request);
-
-            if (result) {
-                break;
-            }
-
-        } catch (err) {
-            if (err.type !== "PSKIgnorableError") {
-                $$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
-            }
-        }
-    }
-
-    if (!result) {
-        $$.log("Failed to load module ", request, result);
-    }
-
-    enableRequire(request);
-    if (previousRequireChanged) {
-        //console.log("End loading library for require", request, $$.__global.requireLibrariesNames[request]);
-        $$.__global.currentLibraryName = null;
-    }
-    return result;
-}
-
-if (typeof($$.require) == "undefined") {
-
-    $$.__requireList = ["webshimsRequire", "pskruntimeRequire"];
-    $$.__requireFunctionsChain = [];
-
-    $$.requireBundle = function (name) {
-        name += "Require";
-        $$.__requireList.push(name);
-        const arr = [requireFromCache];
-        $$.__requireList.forEach(function (item) {
-            const callback = wrapStep(item);
-            if (callback) {
-                arr.push(callback);
-            }
-        });
-
-        $$.__requireFunctionsChain = arr;
-    };
-
-    $$.requireBundle("init");
-
-    if (weAreInbrowser) {
+    function makeBrowserRequire(){
         console.log("Defining global require in browser");
 
 
@@ -192,8 +180,9 @@ if (typeof($$.require) == "undefined") {
             ///*[requireFromCache, wrapStep(webshimsRequire), , wrapStep(pskruntimeRequire), wrapStep(domainRequire)*]
             return tryRequireSequence(null, request);
         }
-    } else
-    if (weAreInSandbox) {
+    }
+
+    function makeIsolateRequire(){
         // require should be provided when code is loaded in browserify
         const bundleRequire = require;
 
@@ -237,8 +226,9 @@ if (typeof($$.require) == "undefined") {
         }
 
         global.require = newLoader;
+    }
 
-    } else {  //we are in node
+    function makeNodeJSRequire(){
         const path = require("path");
         $$.__runtimeModules["crypto"] = require("crypto");
         $$.__runtimeModules["util"] = require("util");
@@ -288,5 +278,44 @@ if (typeof($$.require) == "undefined") {
         Module.prototype.require = newLoader;
     }
 
-    $$.require = require;
-}
+    if (typeof($$.require) == "undefined") {
+
+        $$.__requireList = ["webshimsRequire", "pskruntimeRequire"];
+        $$.__requireFunctionsChain = [];
+
+        $$.requireBundle = function (name) {
+            name += "Require";
+            $$.__requireList.push(name);
+            const arr = [requireFromCache];
+            $$.__requireList.forEach(function (item) {
+                const callback = wrapStep(item);
+                if (callback) {
+                    arr.push(callback);
+                }
+            });
+
+            $$.__requireFunctionsChain = arr;
+        };
+
+        $$.requireBundle("init");
+
+        switch ($$.environmentType) {
+            case moduleConstants.BROWSER_ENVIRONMENT_TYPE:
+                makeBrowserRequire();
+                break;
+            case moduleConstants.ISOLATE_ENVIRONMENT_TYPE:
+                makeIsolateRequire();
+                break;
+            default:
+                makeNodeJSRequire();
+        }
+
+        $$.require = require;
+    }
+};
+
+
+module.exports = {
+    enableForEnvironment,
+    constants: require("./moduleConstants")
+};
