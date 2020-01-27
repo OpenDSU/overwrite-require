@@ -7,6 +7,7 @@ function enableForEnvironment(envType){
     const moduleConstants = require("./moduleConstants");
 
     /**
+     * Used to provide autocomplete for $$ variables
      * @classdesc Interface for $$ object
      *
      * @name $$
@@ -14,18 +15,17 @@ function enableForEnvironment(envType){
      *
      */
 
-    if (typeof(window) !== "undefined") {
+    if (envType === moduleConstants.BROWSER_ENVIRONMENT_TYPE) {
         global = window;
     }
 
 
     if (typeof(global.$$) == "undefined") {
         /**
-         *
+         * Used to provide autocomplete for $$ variables
          * @type {$$}
          */
         global.$$ = {};
-        $$.__global = {};
     }
 
     if (typeof($$.__global) == "undefined") {
@@ -51,9 +51,7 @@ function enableForEnvironment(envType){
     if (typeof($$.__runtimeModules) == "undefined") {
         $$.__runtimeModules = {};
     }
-
-//todo: why do we need this to be loaded here? :-?
-//require("./../standardGlobalSymbols");
+    
 
     if (typeof(global.functionUndefined) == "undefined") {
         global.functionUndefined = function () {
