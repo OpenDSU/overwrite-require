@@ -1,5 +1,6 @@
 module.exports = {
   BROWSER_ENVIRONMENT_TYPE: 'browser',
+  SERVICE_WORKER_ENVIRONMENT_TYPE: 'service-worker',
   ISOLATE_ENVIRONMENT_TYPE: 'isolate',
   THREAD_ENVIRONMENT_TYPE: 'thread',
   NODEJS_ENVIRONMENT_TYPE: 'nodejs'

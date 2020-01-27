@@ -15,10 +15,14 @@ function enableForEnvironment(envType){
      *
      */
 
-    if (envType === moduleConstants.BROWSER_ENVIRONMENT_TYPE) {
-        global = window;
+    switch (envType) {
+        case moduleConstants.BROWSER_ENVIRONMENT_TYPE :
+            global = window;
+            break;
+        case moduleConstants.SERVICE_WORKER_ENVIRONMENT_TYPE:
+            global = self;
+            break;
     }
-
 
     if (typeof(global.$$) == "undefined") {
         /**
@@ -51,7 +55,7 @@ function enableForEnvironment(envType){
     if (typeof($$.__runtimeModules) == "undefined") {
         $$.__runtimeModules = {};
     }
-    
+
 
     if (typeof(global.functionUndefined) == "undefined") {
         global.functionUndefined = function () {
@@ -304,6 +308,9 @@ function enableForEnvironment(envType){
 
         switch ($$.environmentType) {
             case moduleConstants.BROWSER_ENVIRONMENT_TYPE:
+                makeBrowserRequire();
+                break;
+            case moduleConstants.SERVICE_WORKER_ENVIRONMENT_TYPE:
                 makeBrowserRequire();
                 break;
             case moduleConstants.ISOLATE_ENVIRONMENT_TYPE:
