@@ -189,7 +189,8 @@ function enableForEnvironment(envType){
         $$.requireBundle('sandboxBase');
         // this should be set up by sandbox prior to
         const sandboxRequire = global.require;
-        global.crypto = require('crypto');
+        const cryptoModuleName = 'crypto';
+        global.crypto = require(cryptoModuleName);
 
         function newLoader(request) {
             // console.log("newLoader:", request);
@@ -229,11 +230,15 @@ function enableForEnvironment(envType){
     }
 
     function makeNodeJSRequire(){
-        const path = require("path");
-        $$.__runtimeModules["crypto"] = require("crypto");
-        $$.__runtimeModules["util"] = require("util");
+        const pathModuleName = 'path';
+        const path = require(pathModuleName);
+        const cryptoModuleName = 'crypto';
+        const utilModuleName = 'util';
+        $$.__runtimeModules["crypto"] = require(cryptoModuleName);
+        $$.__runtimeModules["util"] = require(utilModuleName);
 
-        const Module = require('module');
+        const moduleModuleName = 'module';
+        const Module = require(moduleModuleName);
         $$.__runtimeModules["module"] = Module;
 
         console.log("Redefining require for node");
