@@ -283,11 +283,12 @@ function enableForEnvironment(envType){
         }
 
         Module.prototype.require = newLoader;
+        return newLoader;
     }
 
     if (typeof($$.require) == "undefined") {
 
-        $$.__requireList = ["webshimsRequire", "pskruntimeRequire"];
+        $$.__requireList = ["webshimsRequire"];
         $$.__requireFunctionsChain = [];
 
         $$.requireBundle = function (name) {
@@ -309,18 +310,20 @@ function enableForEnvironment(envType){
         switch ($$.environmentType) {
             case moduleConstants.BROWSER_ENVIRONMENT_TYPE:
                 makeBrowserRequire();
+                $$.require = require;
                 break;
             case moduleConstants.SERVICE_WORKER_ENVIRONMENT_TYPE:
                 makeBrowserRequire();
+                $$.require = require;
                 break;
             case moduleConstants.ISOLATE_ENVIRONMENT_TYPE:
                 makeIsolateRequire();
+                $$.require = require;
                 break;
             default:
-                makeNodeJSRequire();
+               $$.require = makeNodeJSRequire();
         }
 
-        $$.require = require;
     }
 };
 
