@@ -6,6 +6,8 @@ function enableForEnvironment(envType){
 
     const moduleConstants = require("./moduleConstants");
 
+    require("./standardGlobalSymbols.js");
+
     /**
      * Used to provide autocomplete for $$ variables
      * @classdesc Interface for $$ object
