@@ -7,13 +7,14 @@ if (!global.process || process.env.NO_LOGS !== 'true') {
 
         logger = PSKLogger.getLogger();
 
-        // TODO: remove this once $$ logger is used instead of console
-        PSKLoggerModule.overwriteConsole();
-
         console.log('Logger init successful', process.pid);
     } catch (e) {
-        console.log('Logger not available, using console');
-        logger = console;
+        if(e.message.indexOf("psklogger")!==-1){
+            console.log('Logger not available, using console');
+            logger = console;
+        }else{
+            console.log(e);
+        }
     }
 } else {
     console.log('Environment flag NO_LOGS is set, logging to console');
@@ -278,7 +279,9 @@ $$.registerGlobalSymbol("event", function (event, ...args) {
     if (logger.hasOwnProperty('event')) {
         logger.event(event, ...args);
     } else {
-        // console.log(event, ...args);
+        if(event === "status.domains.boot"){
+            console.log("Failing to console...", event, ...args);
+        }
     }
 });
 

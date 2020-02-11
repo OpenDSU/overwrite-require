@@ -286,6 +286,8 @@ function enableForEnvironment(envType){
         return newLoader;
     }
 
+    require("./standardGlobalSymbols.js");
+
     if (typeof($$.require) == "undefined") {
 
         $$.__requireList = ["webshimsRequire"];
@@ -325,8 +327,6 @@ function enableForEnvironment(envType){
         }
 
     }
-
-    require("./standardGlobalSymbols.js");
 };
 
 
