@@ -156,7 +156,7 @@ function enableForEnvironment(envType){
 
             } catch (err) {
                 if (err.type !== "PSKIgnorableError") {
-                    $$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
+                    //$$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
                 }
             }
         }
