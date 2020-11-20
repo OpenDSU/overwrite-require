@@ -36,6 +36,9 @@ function enableForEnvironment(envType){
         $$.__global = {};
     }
 
+    if (typeof global.wprint === "undefined") {
+        global.wprint = console.warn;
+    }
     Object.defineProperty($$, "environmentType", {
         get: function(){
             return envType;
