@@ -159,7 +159,10 @@ function enableForEnvironment(envType){
 
             } catch (err) {
                 if (err.type !== "PSKIgnorableError") {
-                    console.trace("Failed to load module.......");
+                    if(typeof err == "SyntaxError"){
+                        console.error(err);
+                    }
+                    else console.error("Failed to load module ", request," with error:", err.message);
                     //$$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
                 }
             }
