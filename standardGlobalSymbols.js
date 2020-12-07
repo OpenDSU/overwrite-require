@@ -1,9 +1,12 @@
 let logger = console;
-
+if (typeof $$.Buffer === "undefined" || $$.Buffer == null) {
+    $$.Buffer = require("buffer").Buffer;
+}
 if (!global.process || process.env.NO_LOGS !== 'true') {
     try {
         const zmqName = "zeromq";
         require(zmqName);
+
         const PSKLoggerModule = require('psklogger');
         const PSKLogger = PSKLoggerModule.PSKLogger;
 
