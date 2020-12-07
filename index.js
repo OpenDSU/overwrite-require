@@ -22,6 +22,8 @@ function enableForEnvironment(envType){
         case moduleConstants.SERVICE_WORKER_ENVIRONMENT_TYPE:
             global = self;
             break;
+        default:
+            Error.stackTraceLimit = Infinity;
     }
 
     if (typeof(global.$$) == "undefined") {
@@ -161,8 +163,13 @@ function enableForEnvironment(envType){
                 if (err.type !== "PSKIgnorableError") {
                     if(typeof err == "SyntaxError"){
                         console.error(err);
+                    } else{
+                        if(request === 'zeromq'){
+                            console.error("Failed to load module ", request," with error:", err.message);
+                        }else{
+                            console.error("Failed to load module ", request," with error:", err);
+                        }
                     }
-                    else console.error("Failed to load module ", request," with error:", err.message);
                     //$$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
                 }
             }
