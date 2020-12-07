@@ -1,5 +1,8 @@
 let logger = console;
 
+if(typeof $$.Buffer === "undefined"){
+    $$.Buffer = require("buffer").Buffer;
+}
 if (!global.process || process.env.NO_LOGS !== 'true') {
     try {
         const zmqName = "zeromq";
