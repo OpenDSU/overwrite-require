@@ -3,6 +3,12 @@ let logger = console;
 if(typeof $$.Buffer === "undefined"){
     $$.Buffer = require("buffer").Buffer;
 }
+
+if (typeof global.$$.uidGenerator == "undefined") {
+    $$.uidGenerator = {};
+    $$.uidGenerator.safe_uuid = require("swarmutils").safe_uuid;
+}
+
 if (!global.process || process.env.NO_LOGS !== 'true') {
     try {
         const zmqName = "zeromq";
