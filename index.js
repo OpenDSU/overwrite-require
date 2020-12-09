@@ -165,7 +165,7 @@ function enableForEnvironment(envType){
                         console.error(err);
                     } else{
                         if(request === 'zeromq'){
-                            console.error("Failed to load module ", request," with error:", err.message);
+                            console.warn("Failed to load module ", request," with error:", err.message);
                         }else{
                             console.error("Failed to load module ", request," with error:", err);
                         }
