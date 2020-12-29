@@ -89,9 +89,9 @@ $$.registerGlobalSymbol("logError", function (err) {
  * @name $$#fixMe
  * @param {...*} args
  */
-console.log("Fix the fixMe to not display on console but put in logs");
+
 $$.registerGlobalSymbol("fixMe", function (...args) {
-    //$$.log(...args);
+    console.log("Fix this:", ...args);
 });
 
 /**
