@@ -19,6 +19,7 @@ function enableForEnvironment(envType){
         case moduleConstants.BROWSER_ENVIRONMENT_TYPE :
             global = window;
             break;
+        case moduleConstants.WEB_WORKER_ENVIRONMENT_TYPE:
         case moduleConstants.SERVICE_WORKER_ENVIRONMENT_TYPE:
             global = self;
             break;
@@ -325,6 +326,10 @@ function enableForEnvironment(envType){
 
         switch ($$.environmentType) {
             case moduleConstants.BROWSER_ENVIRONMENT_TYPE:
+                makeBrowserRequire();
+                $$.require = require;
+                break;
+            case moduleConstants.WEB_WORKER_ENVIRONMENT_TYPE:
                 makeBrowserRequire();
                 $$.require = require;
                 break;
