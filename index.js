@@ -360,7 +360,18 @@ function enableForEnvironment(envType){
             });
         };
     };
-};
+
+    $$.makeSaneCallback = function makeSaneCallback(fn) {
+        let alreadyCalled = false;
+        return (...args) => {
+            if (alreadyCalled) {
+                throw new Error("Callback called 2 times! Second call was stopped. Function code:\n" + fn.toString());
+            }
+            alreadyCalled = true;
+            return fn(...args);
+        };
+    };
+}
 
 
 
