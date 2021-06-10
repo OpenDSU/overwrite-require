@@ -105,6 +105,10 @@ function enableForEnvironment(envType){
         return existingModule;
     }
 
+    $$.__registerModule = function (name, module) {
+        $$.__runtimeModules[name] = module;
+    }
+
     function wrapStep(callbackName) {
         const callback = global[callbackName];
 
