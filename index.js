@@ -367,15 +367,19 @@ function enableForEnvironment(envType){
 
     $$.makeSaneCallback = function makeSaneCallback(fn) {
         let alreadyCalled = false;
+        let prevErr;
         return (err, res, ...args) => {
             if (alreadyCalled) {
                 if (err) {
                     console.log('Sane callback error:', err);
                 }
 
-                throw new Error(`Callback called 2 times! Second call was stopped. Function code:\n${fn.toString()}\n`);
+                throw new Error(`Callback called 2 times! Second call was stopped. Function code:\n${fn.toString()}\n` + (prevErr ? `Previous error stack ${prevErr.toString()}` : ''));
             }
             alreadyCalled = true;
+            if(err){
+                prevErr = err;
+            }
             return fn(err, res, ...args);
         };
     };
