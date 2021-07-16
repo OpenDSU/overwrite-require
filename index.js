@@ -352,7 +352,7 @@ function enableForEnvironment(envType){
     }
 
     $$.promisify = function promisify(fn) {
-        return function (...args) {
+        const promisifiedFn =  function (...args) {
             return new Promise((resolve, reject) => {
                 fn(...args, (err, ...res) => {
                     if (err) {
@@ -363,6 +363,11 @@ function enableForEnvironment(envType){
                 });
             });
         };
+        if(promisifiedFn.toString() === fn.toString()){
+            console.log("Function already promisified");
+            return fn;
+        }
+        return promisifiedFn;
     };
 
     $$.makeSaneCallback = function makeSaneCallback(fn) {
