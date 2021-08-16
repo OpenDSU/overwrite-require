@@ -351,9 +351,12 @@ function enableForEnvironment(envType){
 
     }
 
-    $$.promisify = function promisify(fn) {
-        const promisifiedFn =  function (...args) {
+    $$.promisify = function promisify(fn, instance) {
+        const promisifiedFn = function (...args) {
             return new Promise((resolve, reject) => {
+                if (instance) {
+                    fn = fn.bind(instance);
+                }
                 fn(...args, (err, ...res) => {
                     if (err) {
                         reject(err);
@@ -363,7 +366,7 @@ function enableForEnvironment(envType){
                 });
             });
         };
-        if(promisifiedFn.toString() === fn.toString()){
+        if (promisifiedFn.toString() === fn.toString()) {
             console.log("Function already promisified");
             return fn;
         }
