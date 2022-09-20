@@ -109,6 +109,8 @@ function enableForEnvironment(envType){
         $$.__runtimeModules[name] = module;
     }
 
+    $$.getLogger = require("./Logger").getLogger;
+
     function wrapStep(callbackName) {
         const callback = global[callbackName];
 
