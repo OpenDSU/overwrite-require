@@ -3,16 +3,25 @@ function Logger(className, moduleName, criticalLogFile) {
         throw Error(`Arguments className and moduleName are mandatory.`);
     }
 
-    const getPaddingForArg = (arg) => {
-        let noSpaces = Math.abs(9 - arg.length);
+    const MAX_STRING_LENGTH = 11;
+    const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
+        let noSpaces = Math.abs(maxLen - arg.length);
         let spaces = String(" ").repeat(noSpaces);
         return spaces;
     };
 
+    const normalizeArg = (arg) => {
+        if (arg.length >= MAX_STRING_LENGTH) {
+            return arg.substring(0, MAX_STRING_LENGTH);
+        } else {
+            return `${arg}${getPaddingForArg(arg)}`;
+        }
+    }
+
     const getPreamble = (functionName) => {
         const type = functionName.toUpperCase();
         const timestamp = Date.now().toString();
-        const preamble = `${type}${getPaddingForArg(timestamp)}${timestamp}${getPaddingForArg(className)}${className}${getPaddingForArg(moduleName)}${moduleName}${getPaddingForArg(moduleName)}`;
+        const preamble = `${type}${getPaddingForArg(type, 9)}${timestamp} ${normalizeArg(className)} ${normalizeArg(moduleName)}`;
         return preamble;
     }
 
