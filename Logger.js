@@ -1,4 +1,4 @@
-function Logger(className, moduleName, criticalLogFile) {
+function Logger(className, moduleName, logFile) {
     if (typeof className === "undefined" || typeof moduleName === "undefined") {
         throw Error(`Arguments className and moduleName are mandatory.`);
     }
@@ -18,11 +18,35 @@ function Logger(className, moduleName, criticalLogFile) {
         }
     }
 
-    const getPreamble = (functionName) => {
+    const convertIntToHexString = (number) => {
+        let hexString = number.toString("16");
+        let paddingLength = (2 - hexString.length) >= 0 ? (2 - hexString.length) : 0;
+        for (let i = 0; i < paddingLength; i++) {
+            hexString = "0" + hexString;
+        }
+        return "0x" + hexString;
+    }
+
+    const getPreamble = (functionName, code = 0) => {
         const type = functionName.toUpperCase();
         const timestamp = Date.now().toString();
-        const preamble = `${type}${getPaddingForArg(type, 9)}${timestamp} ${normalizeArg(className)} ${normalizeArg(moduleName)}`;
+        const preamble = `${type}${getPaddingForArg(type, 9)}${convertIntToHexString(code)} ${timestamp} ${normalizeArg(className)} ${normalizeArg(moduleName)}`;
         return preamble;
+    }
+
+
+    const stripCodeFromArgs = (...args) => {
+        let code = args[0];
+        if (typeof code !== "number") {
+            code = 0;
+        } else {
+            args.shift();
+        }
+
+        return {
+            code,
+            args
+        }
     }
 
     const executeFunctionFromConsole = (functionName, ...args) => {
@@ -32,71 +56,71 @@ function Logger(className, moduleName, criticalLogFile) {
             }
         }
 
-        console[functionName](getPreamble(functionName), ...args);
-    }
-
-    this.log = (...args) => {
-        executeFunctionFromConsole("log", ...args);
-    }
-
-    this.info = (...args) => {
-        executeFunctionFromConsole("info", ...args);
-    }
-
-    this.warn = (...args) => {
-        executeFunctionFromConsole("warn", ...args);
-    }
-
-    this.trace = (...args) => {
-        executeFunctionFromConsole("trace", ...args);
-    }
-
-    this.debug = (...args) => {
-        executeFunctionFromConsole("debug", ...args);
-    }
-
-    this.error = (...args) => {
-        executeFunctionFromConsole("error", ...args);
-    }
-
-    this.critical = (...args) => {
-        const callback = args.pop();
-        if (typeof criticalLogFile === "undefined") {
-            return callback(Error("criticalLogFile argument is missing"));
+        const res = stripCodeFromArgs(...args);
+        const preamble = getPreamble(functionName, res.code);
+        if (functionName === "critical") {
+            functionName = "error";
         }
+        console[functionName](preamble, ...res.args);
+    }
 
+    const writeToFile = (functionName, ...args) => {
         const fs = require("fs");
         const path = require("path");
-        let stringToBeWritten = getPreamble("critical");
-        for (let i = 0; i < args.length; i++) {
-            stringToBeWritten += args[i]
+        if (typeof logFile === "undefined") {
+            return;
+        }
+        const res = stripCodeFromArgs(...args);
+        let stringToBeWritten = getPreamble(functionName, res.code);
+        for (let i = 0; i < res.args.length; i++) {
+            stringToBeWritten += res.args[i]
         }
 
         stringToBeWritten += require("os").EOL;
 
-        fs.access(criticalLogFile, err => {
-            if (err) {
-                fs.access(path.dirname(criticalLogFile), err => {
-                    if (err) {
-                        fs.mkdir(path.dirname(criticalLogFile), {recursive: true}, err => {
-                            if (err) {
-                                return callback(err);
-                            }
+        try {
+            fs.accessSync(path.dirname(logFile));
+        } catch (e) {
+            fs.mkdirSync(path.dirname(logFile), {recursive: true});
+        }
 
-                            fs.writeFile(criticalLogFile, stringToBeWritten, callback);
-                        })
+        fs.appendFileSync(logFile, stringToBeWritten);
+    }
 
-                        return;
-                    }
+    const printToConsoleAndFile = (functionName, ...args) => {
+        executeFunctionFromConsole(functionName, ...args);
+        const envTypes = require("./moduleConstants");
+        if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
+            writeToFile(functionName, ...args);
+        }
+    }
 
-                    fs.writeFile(criticalLogFile, stringToBeWritten, callback);
-                });
+    this.log = (...args) => {
+        printToConsoleAndFile("log", ...args);
+    }
 
-                return;
-            }
+    this.info = (...args) => {
+        printToConsoleAndFile("info", ...args);
+    }
 
-            fs.appendFile(criticalLogFile, stringToBeWritten, callback);
-        })
+    this.warn = (...args) => {
+        printToConsoleAndFile("warn", ...args);
+    }
+
+    this.trace = (...args) => {
+        printToConsoleAndFile("trace", ...args);
+    }
+
+    this.debug = (...args) => {
+        printToConsoleAndFile("debug", ...args);
+    }
+
+    this.error = (...args) => {
+        printToConsoleAndFile("error", ...args);
+    }
+
+    this.critical = (...args) => {
+        printToConsoleAndFile("critical", ...args);
     }
 }
 
