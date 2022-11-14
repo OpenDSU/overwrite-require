@@ -18,14 +18,6 @@ function Logger(className, moduleName, logFile) {
         return spaces;
     };
 
-    const normalizeArg = (arg) => {
-        if (arg.length >= MAX_STRING_LENGTH) {
-            return arg.substring(0, MAX_STRING_LENGTH);
-        } else {
-            return `${arg}${getPaddingForArg(arg)}`;
-        }
-    }
-
     const convertIntToHexString = (number) => {
         let hexString = number.toString("16");
         let paddingLength = (2 - hexString.length) >= 0 ? (2 - hexString.length) : 0;
@@ -42,7 +34,6 @@ function Logger(className, moduleName, logFile) {
             message += args[i] + " ";
         }
 
-        message.trimEnd();
         const logObject = {
             severity: functionName.toUpperCase(),
             timestamp: new Date().toISOString(),
