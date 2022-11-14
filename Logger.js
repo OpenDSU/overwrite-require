@@ -1,9 +1,17 @@
+const envTypes = require("./moduleConstants");
+const originalConsole = Object.assign({}, console);
+if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
+    const logger = new Logger("Logger", "overwrite-require");
+    Object.assign(console, logger);
+}
+
 function Logger(className, moduleName, logFile) {
     if (typeof className === "undefined" || typeof moduleName === "undefined") {
         throw Error(`Arguments className and moduleName are mandatory.`);
     }
 
     const MAX_STRING_LENGTH = 11;
+    const IS_DEV_MODE = process.env.DEV === "true";
     const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
         let noSpaces = Math.abs(maxLen - arg.length);
         let spaces = String(" ").repeat(noSpaces);
@@ -27,13 +35,43 @@ function Logger(className, moduleName, logFile) {
         return "0x" + hexString;
     }
 
-    const getPreamble = (functionName, code = 0) => {
-        const type = functionName.toUpperCase();
-        const timestamp = Date.now().toString();
-        const preamble = `${type}${getPaddingForArg(type, 9)}${convertIntToHexString(code)} ${timestamp} ${normalizeArg(className)} ${normalizeArg(moduleName)}`;
-        return preamble;
+    const createLogObject = (functionName, code = 0, ...args) => {
+        const crypto = require("opendsu").loadAPI("crypto");
+        let message = "";
+        for (let i = 0; i < args.length; i++) {
+            message += args[i] + " ";
+        }
+
+        message.trimEnd();
+        const logObject = {
+            severity: functionName.toUpperCase(),
+            timestamp: new Date().toISOString(),
+            eventTypeId: convertIntToHexString(code),
+            transactionId: crypto.generateRandom(32).toString("hex"),
+            message
+        }
+        return logObject;
     }
 
+    const getLogStringFromObject = (logObject, appendEOL = false) => {
+        let logString = JSON.stringify(logObject);
+        if (IS_DEV_MODE) {
+            logObject.message = logObject.message.replaceAll("\n", "\n\t");
+            logString = `${logObject.severity}${getPaddingForArg(logObject.severity, 9)}${logObject.eventTypeId} ${logObject.timestamp} ${logObject.transactionId} ${logObject.message}`;
+            if (appendEOL) {
+                logString += require("os").EOL;
+            }
+        }
+
+        return logString;
+    }
+
+    const getLogAsString = (functionName, appendEOL = false, ...args) => {
+        const res = stripCodeFromArgs(...args);
+        let logObject = createLogObject(functionName, res.code, ...res.args);
+        let logString = getLogStringFromObject(logObject, appendEOL);
+        return logString;
+    }
 
     const stripCodeFromArgs = (...args) => {
         let code = args[0];
@@ -50,18 +88,11 @@ function Logger(className, moduleName, logFile) {
     }
 
     const executeFunctionFromConsole = (functionName, ...args) => {
-        for (let i = 0; i < args.length; i++) {
-            if (typeof args[i] === "string") {
-                args[i] = args[i].replaceAll("\n", "\n\t");
-            }
-        }
-
-        const res = stripCodeFromArgs(...args);
-        const preamble = getPreamble(functionName, res.code);
         if (functionName === "critical") {
             functionName = "error";
         }
-        console[functionName](preamble, ...res.args);
+        const log = getLogAsString(functionName, false, ...args);
+        originalConsole[functionName](log);
     }
 
     const writeToFile = (functionName, ...args) => {
@@ -70,26 +101,19 @@ function Logger(className, moduleName, logFile) {
         if (typeof logFile === "undefined") {
             return;
         }
-        const res = stripCodeFromArgs(...args);
-        let stringToBeWritten = getPreamble(functionName, res.code);
-        for (let i = 0; i < res.args.length; i++) {
-            stringToBeWritten += res.args[i]
-        }
 
-        stringToBeWritten += require("os").EOL;
-
+        let log = getLogAsString(functionName, true, ...args);
         try {
             fs.accessSync(path.dirname(logFile));
         } catch (e) {
             fs.mkdirSync(path.dirname(logFile), {recursive: true});
         }
 
-        fs.appendFileSync(logFile, stringToBeWritten);
+        fs.appendFileSync(logFile, log);
     }
 
     const printToConsoleAndFile = (functionName, ...args) => {
         executeFunctionFromConsole(functionName, ...args);
-        const envTypes = require("./moduleConstants");
         if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
             writeToFile(functionName, ...args);
         }
