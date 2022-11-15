@@ -37,6 +37,7 @@ function Logger(className, moduleName, logFile) {
             message += args[i] + " ";
         }
 
+        message = message.trimEnd();
         const logObject = {
             severity: functionName.toUpperCase(),
             timestamp: new Date().toISOString(),
@@ -49,7 +50,7 @@ function Logger(className, moduleName, logFile) {
     }
 
     const getLogStringFromObject = (logObject, appendEOL = false) => {
-        let logString = JSON.stringify(logObject);
+        let logString;
         if (IS_DEV_MODE) {
             logObject.message = logObject.message.replaceAll("\n", "\n\t");
             logString = `${logObject.severity}${getPaddingForArg(logObject.severity, 9)}${logObject.eventTypeId}${getPaddingForArg(logObject.eventTypeId, 3)} ${logObject.timestamp}`;
@@ -66,8 +67,11 @@ function Logger(className, moduleName, logFile) {
             if (appendEOL) {
                 logString += require("os").EOL;
             }
+        } else {
+            logObject.message = logObject.message.replaceAll("\n", "\\n");
+            logObject.message = logObject.message.replaceAll("\r", "\\r");
+            logString = JSON.stringify(logObject);
         }
-
         return logString;
     }
 
