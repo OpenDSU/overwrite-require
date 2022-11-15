@@ -2,14 +2,11 @@ const envTypes = require("./moduleConstants");
 const originalConsole = Object.assign({}, console);
 if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
     const logger = new Logger("Logger", "overwrite-require");
+    logger.log = logger.trace;
     Object.assign(console, logger);
 }
 
 function Logger(className, moduleName, logFile) {
-    if (typeof className === "undefined" || typeof moduleName === "undefined") {
-        throw Error(`Arguments className and moduleName are mandatory.`);
-    }
-
     const MAX_STRING_LENGTH = 11;
     const IS_DEV_MODE = process.env.DEV === "true";
     const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
@@ -20,15 +17,21 @@ function Logger(className, moduleName, logFile) {
 
     const convertIntToHexString = (number) => {
         let hexString = number.toString("16");
-        let paddingLength = (2 - hexString.length) >= 0 ? (2 - hexString.length) : 0;
-        for (let i = 0; i < paddingLength; i++) {
+        if (hexString.length === 1) {
             hexString = "0" + hexString;
         }
         return "0x" + hexString;
     }
 
+    const normalizeArg = (arg) => {
+        if (arg.length >= MAX_STRING_LENGTH) {
+            return arg.substring(0, MAX_STRING_LENGTH);
+        } else {
+            return `${arg}${getPaddingForArg(arg)}`;
+        }
+    }
+
     const createLogObject = (functionName, code = 0, ...args) => {
-        const crypto = require("opendsu").loadAPI("crypto");
         let message = "";
         for (let i = 0; i < args.length; i++) {
             message += args[i] + " ";
@@ -38,7 +41,8 @@ function Logger(className, moduleName, logFile) {
             severity: functionName.toUpperCase(),
             timestamp: new Date().toISOString(),
             eventTypeId: convertIntToHexString(code),
-            transactionId: crypto.generateRandom(32).toString("hex"),
+            component: moduleName,
+            className: className,
             message
         }
         return logObject;
@@ -48,7 +52,17 @@ function Logger(className, moduleName, logFile) {
         let logString = JSON.stringify(logObject);
         if (IS_DEV_MODE) {
             logObject.message = logObject.message.replaceAll("\n", "\n\t");
-            logString = `${logObject.severity}${getPaddingForArg(logObject.severity, 9)}${logObject.eventTypeId} ${logObject.timestamp} ${logObject.transactionId} ${logObject.message}`;
+            logString = `${logObject.severity}${getPaddingForArg(logObject.severity, 9)}${logObject.eventTypeId}${getPaddingForArg(logObject.eventTypeId, 3)} ${logObject.timestamp}`;
+
+            if (typeof logObject.component !== "undefined") {
+                logString = `${logString} ${normalizeArg(logObject.component)}`;
+            }
+            if (typeof logObject.className !== "undefined") {
+                logString = `${logString} ${normalizeArg(logObject.className)}`;
+            }
+
+            logString = `${logString} ${logObject.message}`;
+
             if (appendEOL) {
                 logString += require("os").EOL;
             }
@@ -78,12 +92,21 @@ function Logger(className, moduleName, logFile) {
         }
     }
 
-    const executeFunctionFromConsole = (functionName, ...args) => {
-        if (functionName === "critical") {
-            functionName = "error";
+    const getConsoleFunction = (functionName) => {
+        if (functionName === functions.CRITICAL) {
+            functionName = functions.ERROR;
         }
+
+        if (functionName === functions.TRACE || functionName === functions.AUDIT) {
+            functionName = functions.LOG;
+        }
+
+        return functionName;
+    }
+
+    const executeFunctionFromConsole = (functionName, ...args) => {
         const log = getLogAsString(functionName, false, ...args);
-        originalConsole[functionName](log);
+        originalConsole[getConsoleFunction(functionName)](log);
     }
 
     const writeToFile = (functionName, ...args) => {
@@ -110,32 +133,21 @@ function Logger(className, moduleName, logFile) {
         }
     }
 
-    this.log = (...args) => {
-        printToConsoleAndFile("log", ...args);
+    const functions = {
+        LOG: "log",
+        INFO: "info",
+        WARN: "warn",
+        TRACE: "trace",
+        DEBUG: "debug",
+        ERROR: "error",
+        CRITICAL: "critical",
+        AUDIT: "audit"
     }
 
-    this.info = (...args) => {
-        printToConsoleAndFile("info", ...args);
-    }
-
-    this.warn = (...args) => {
-        printToConsoleAndFile("warn", ...args);
-    }
-
-    this.trace = (...args) => {
-        printToConsoleAndFile("trace", ...args);
-    }
-
-    this.debug = (...args) => {
-        printToConsoleAndFile("debug", ...args);
-    }
-
-    this.error = (...args) => {
-        printToConsoleAndFile("error", ...args);
-    }
-
-    this.critical = (...args) => {
-        printToConsoleAndFile("critical", ...args);
+    for (let fnName in functions) {
+        this[functions[fnName]] = (...args) => {
+            printToConsoleAndFile(functions[fnName], ...args);
+        }
     }
 }
 
