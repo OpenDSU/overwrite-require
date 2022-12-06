@@ -1,8 +1,14 @@
 const envTypes = require("./moduleConstants");
 const originalConsole = Object.assign({}, console);
+const DEBUG_LOG_ENABLED = process.env.OPENDSU_ENABLE_DEBUG === "true";
+
 if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
     const logger = new Logger("Logger", "overwrite-require");
-    logger.log = logger.trace;
+    if (DEBUG_LOG_ENABLED) {
+        logger.log = logger.debug;
+    } else {
+        logger.log = () => {}
+    }
     Object.assign(console, logger);
 }
 
@@ -101,7 +107,7 @@ function Logger(className, moduleName, logFile) {
             functionName = functions.ERROR;
         }
 
-        if (functionName === functions.TRACE || functionName === functions.AUDIT) {
+        if (functionName === functions.AUDIT) {
             functionName = functions.LOG;
         }
 
@@ -152,6 +158,10 @@ function Logger(className, moduleName, logFile) {
         this[functions[fnName]] = (...args) => {
             printToConsoleAndFile(functions[fnName], ...args);
         }
+    }
+
+    if (!DEBUG_LOG_ENABLED) {
+        this[functions.TRACE] = this[functions.DEBUG] = () => {};
     }
 }
 
