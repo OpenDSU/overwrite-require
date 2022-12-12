@@ -90,7 +90,7 @@ function Logger(className, moduleName, logFile) {
 
     const stripCodeFromArgs = (...args) => {
         let code = args[0];
-        if (typeof code !== "number") {
+        if (typeof code !== "number" || args.length === 1) {
             code = 0;
         } else {
             args.shift();
