@@ -14,7 +14,7 @@ if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
 
 function Logger(className, moduleName, logFile) {
     const MAX_STRING_LENGTH = 11;
-    const IS_DEV_MODE = process.env.DEV === "true";
+    const IS_DEV_MODE = process.env.DEV === "true" || typeof process.env.DEV === "undefined";
     const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
         let noSpaces = Math.abs(maxLen - arg.length);
         let spaces = String(" ").repeat(noSpaces);
