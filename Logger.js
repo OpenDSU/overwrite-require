@@ -1,7 +1,10 @@
 const envTypes = require("./moduleConstants");
 const originalConsole = Object.assign({}, console);
+const IS_DEV_MODE = process.env.DEV === "true" || typeof process.env.DEV === "undefined";
+if (typeof process.env.OPENDSU_ENABLE_DEBUG === "undefined" ) {
+    process.env.OPENDSU_ENABLE_DEBUG = IS_DEV_MODE.toString();
+}
 const DEBUG_LOG_ENABLED = process.env.OPENDSU_ENABLE_DEBUG === "true";
-
 if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
     const logger = new Logger("Logger", "overwrite-require");
     if (DEBUG_LOG_ENABLED) {
@@ -14,7 +17,6 @@ if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
 
 function Logger(className, moduleName, logFile) {
     const MAX_STRING_LENGTH = 11;
-    const IS_DEV_MODE = process.env.DEV === "true" || typeof process.env.DEV === "undefined";
     const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
         let noSpaces = Math.abs(maxLen - arg.length);
         let spaces = String(" ").repeat(noSpaces);
