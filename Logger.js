@@ -13,6 +13,20 @@ if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
         logger.log = () => {}
     }
     Object.assign(console, logger);
+} else {
+  $$.memoryLogger = new MemoryFileMock();
+  const logger = new Logger("Logger", "overwrite-require", $$.memoryLogger);
+  Object.assign(console, logger);
+}
+
+function MemoryFileMock() {
+  let arr = [];
+  this.append = (logLine) => {
+    arr.push(logLine);
+  }
+  this.dump = () => {
+    return JSON.stringify(arr);
+  }
 }
 
 function Logger(className, moduleName, logFile) {
@@ -39,10 +53,23 @@ function Logger(className, moduleName, logFile) {
         }
     }
 
+    const getLogMessage = (data) => {
+        let msg;
+        try {
+            if (typeof data === "object") {
+                msg = JSON.stringify(data) + " ";
+            } else {
+                msg = data + " "
+            }
+        } catch (e) {
+            msg = e.message + " ";
+        }
+        return msg;
+    }
     const createLogObject = (functionName, code = 0, ...args) => {
         let message = "";
         for (let i = 0; i < args.length; i++) {
-            message += args[i] + " ";
+            message += getLogMessage(args[i]);
         }
 
         message = message.trimEnd();
@@ -129,6 +156,10 @@ function Logger(className, moduleName, logFile) {
         }
 
         let log = getLogAsString(functionName, true, ...args);
+        if (logFile instanceof MemoryFileMock) {
+          logFile.append(log);
+          return;
+        }
         try {
             fs.accessSync(path.dirname(logFile));
         } catch (e) {
@@ -140,9 +171,7 @@ function Logger(className, moduleName, logFile) {
 
     const printToConsoleAndFile = (functionName, ...args) => {
         executeFunctionFromConsole(functionName, ...args);
-        if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
-            writeToFile(functionName, ...args);
-        }
+        writeToFile(functionName, ...args);
     }
 
     const functions = {
