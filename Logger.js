@@ -1,7 +1,7 @@
 const envTypes = require("./moduleConstants");
 const originalConsole = Object.assign({}, console);
 const IS_DEV_MODE = process.env.DEV === "true" || typeof process.env.DEV === "undefined";
-if (typeof process.env.OPENDSU_ENABLE_DEBUG === "undefined" ) {
+if (typeof process.env.OPENDSU_ENABLE_DEBUG === "undefined") {
     process.env.OPENDSU_ENABLE_DEBUG = IS_DEV_MODE.toString();
 }
 const DEBUG_LOG_ENABLED = process.env.OPENDSU_ENABLE_DEBUG === "true";
@@ -10,23 +10,24 @@ if ($$.environmentType === envTypes.NODEJS_ENVIRONMENT_TYPE) {
     if (DEBUG_LOG_ENABLED) {
         logger.log = logger.debug;
     } else {
-        logger.log = () => {}
+        logger.log = () => {
+        }
     }
     Object.assign(console, logger);
 } else {
-  $$.memoryLogger = new MemoryFileMock();
-  const logger = new Logger("Logger", "overwrite-require", $$.memoryLogger);
-  Object.assign(console, logger);
+    $$.memoryLogger = new MemoryFileMock();
+    const logger = new Logger("Logger", "overwrite-require", $$.memoryLogger);
+    Object.assign(console, logger);
 }
 
 function MemoryFileMock() {
-  let arr = [];
-  this.append = (logLine) => {
-    arr.push(logLine);
-  }
-  this.dump = () => {
-    return JSON.stringify(arr);
-  }
+    let arr = [];
+    this.append = (logLine) => {
+        arr.push(logLine);
+    }
+    this.dump = () => {
+        return JSON.stringify(arr);
+    }
 }
 
 function Logger(className, moduleName, logFile) {
@@ -144,8 +145,12 @@ function Logger(className, moduleName, logFile) {
     }
 
     const executeFunctionFromConsole = (functionName, ...args) => {
-        const log = getLogAsString(functionName, false, ...args);
-        originalConsole[getConsoleFunction(functionName)](log);
+        if ($$.memoryLogger) {
+            originalConsole[getConsoleFunction(functionName)](...args);
+        } else {
+            const log = getLogAsString(functionName, false, ...args);
+            originalConsole[getConsoleFunction(functionName)](log);
+        }
     }
 
     const writeToFile = (functionName, ...args) => {
@@ -157,8 +162,8 @@ function Logger(className, moduleName, logFile) {
 
         let log = getLogAsString(functionName, true, ...args);
         if (logFile instanceof MemoryFileMock) {
-          logFile.append(log);
-          return;
+            logFile.append(log);
+            return;
         }
         try {
             fs.accessSync(path.dirname(logFile));
@@ -192,7 +197,8 @@ function Logger(className, moduleName, logFile) {
     }
 
     if (!DEBUG_LOG_ENABLED) {
-        this[functions.TRACE] = this[functions.DEBUG] = () => {};
+        this[functions.TRACE] = this[functions.DEBUG] = () => {
+        };
     }
 }
 
