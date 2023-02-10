@@ -329,6 +329,14 @@ function enableForEnvironment(envType){
             case moduleConstants.BROWSER_ENVIRONMENT_TYPE:
                 makeBrowserRequire();
                 $$.require = require;
+                let possibleRedirects = [301, 302];
+                $$.httpUnknownResponseGlobalHandler = function(res){
+                    console.log("Global handler for unknown http errors was called", res.status, res);
+                    if(possibleRedirects.indexOf(res.status)!==-1){
+                        window.location = "/";
+                        return;
+                    }
+                };
                 break;
             case moduleConstants.WEB_WORKER_ENVIRONMENT_TYPE:
                 makeBrowserRequire();
