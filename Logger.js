@@ -195,6 +195,8 @@ function Logger(className, moduleName, logFile) {
             printToConsoleAndFile(functions[fnName], ...args);
         }
     }
+    //adding alias for warn fnc
+    this.warning = this.warn;
 
     if (!DEBUG_LOG_ENABLED) {
         this[functions.TRACE] = this[functions.DEBUG] = () => {
