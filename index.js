@@ -332,7 +332,7 @@ function enableForEnvironment(envType){
                 let possibleRedirects = [301, 302];
                 $$.httpUnknownResponseGlobalHandler = function(res){
                     console.log("Global handler for unknown http errors was called", res.status, res);
-                    if(possibleRedirects.indexOf(res.status)!==-1){
+                    if(res.status && possibleRedirects.indexOf(res.status)!==-1){
                         window.location = "/";
                         return;
                     }
