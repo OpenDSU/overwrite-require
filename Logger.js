@@ -1,6 +1,7 @@
 const envTypes = require("./moduleConstants");
 const originalConsole = Object.assign({}, console);
 const IS_DEV_MODE = process.env.DEV === "true" || typeof process.env.DEV === "undefined";
+
 if (typeof process.env.OPENDSU_ENABLE_DEBUG === "undefined") {
     process.env.OPENDSU_ENABLE_DEBUG = IS_DEV_MODE.toString();
 }
@@ -55,12 +56,18 @@ function Logger(className, moduleName, logFile) {
     }
 
     const getLogMessage = (data) => {
-        let msg;
+        let msg = '';
         try {
             if (typeof data === "object") {
-                msg = JSON.stringify(data) + " ";
+                if (data instanceof Error) {
+                    msg = `${data.message}\n${data.stack}`;
+                } else if (data.debug_stack || data.debug_message) {
+                    msg = data.toString();
+                } else {
+                    msg = JSON.stringify(data) + " ";
+                }
             } else {
-                msg = data + " "
+                msg = data + " ";
             }
         } catch (e) {
             msg = e.message + " ";
