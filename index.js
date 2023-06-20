@@ -378,6 +378,21 @@ function enableForEnvironment(envType){
         return promisifiedFn;
     };
 
+   $$.callAsync = async function (func, ...args) {
+        let error, result;
+        try {
+            result =  await func(...args);
+        } catch(err) {
+            error = err
+        }
+        return [error, result];
+    }
+
+    $$.call = async function (func, ...args) {
+        let asyncFunc = $$.promisify(func);
+        return $$.callAsync(asyncFunc, ...args);
+    }
+ 
     $$.makeSaneCallback = function makeSaneCallback(fn) {
         let alreadyCalled = false;
         let prevErr;
