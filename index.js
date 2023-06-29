@@ -68,17 +68,6 @@ function enableForEnvironment(envType){
             console.log("Called of an undefined function!!!!");
             throw new Error("Called of an undefined function");
         };
-        if (typeof(global.webshimsRequire) == "undefined") {
-            global.webshimsRequire = global.functionUndefined;
-        }
-
-        if (typeof(global.domainRequire) == "undefined") {
-            global.domainRequire = global.functionUndefined;
-        }
-
-        if (typeof(global.pskruntimeRequire) == "undefined") {
-            global.pskruntimeRequire = global.functionUndefined;
-        }
     }
 
     const pastRequests = {};
