@@ -454,7 +454,7 @@ function enableForEnvironment(envType){
        this.log = function(...args){
            if(!debugEnabled) return;
            console.debug(...args);
-           debugEvents.push(`Log:${debugEvents.length+1}` +[...args].join(" "));
+           debugEvents.push(`Log #${debugEvents.length}` +[...args].join(" "));
            eventsStack.push(getStackTrace());
        }
 
@@ -464,7 +464,12 @@ function enableForEnvironment(envType){
        }
 
        this.context = function(eventNumber){
-           return console.log(`Event ${debugEvents[eventNumber]}:\n`, eventsStack[eventNumber],"\n");
+           let realNumber = eventNumber;
+           if(typeof eventNumber == "string"){
+               eventNumber = eventNumber.slice(1);
+               realNumber = parseInt(eventNumber);
+           }
+           return console.log(`Event ${debugEvents[eventNumber]}:\n`, eventsStack[realNumber],"\n");
        }
 
    }
