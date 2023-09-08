@@ -407,6 +407,70 @@ function enableForEnvironment(envType){
         newFn.alreadyWrapped = true;
         return newFn;
     };
+
+   function DebugHelper(){
+       let debugEnabled = false;
+       let debugEvents = [];
+       let eventsStack = [];
+
+       function getStackTrace(){
+              return new Error().stack;
+       }
+       this.start = function(){
+           debugEnabled = true;
+       }
+
+       this.resume = this.start;
+
+       this.reset =function(){
+           debugEnabled = true;
+           let debugEvents = [];
+           let eventsStack = [];
+       }
+
+       this.stop = function(){
+           debugEnabled = false;
+       }
+
+       this.logDSUEvent = function(dsu, ...args){
+            if(!debugEnabled) return;
+
+            let anchorID, dsuInstanceUID;
+            try{
+                anchorID = dsu.getAnchorIdSync();
+                anchorID = anchorID.substring(4, 27)+"...";
+            } catch(err){
+                anchorID = "N/A";
+            }
+
+           try{
+               dsuInstanceUID = dsu.getInstanceUID();
+           } catch(err){
+               dsuInstanceUID = "N/A";
+           }
+            this.log(`[${anchorID}][${dsuInstanceUID}]`, ...args);
+       }
+
+       this.log = function(...args){
+           if(!debugEnabled) return;
+           console.debug(...args);
+           debugEvents.push([...args].join(" "));
+           eventsStack.push(getStackTrace());
+       }
+
+       this.logs = function(){
+            console.log(`${debugEvents.length} events logged}`);
+            console.log(debugEvents.join("\n"));
+       }
+
+       this.context = function(eventNumber){
+           return console.log(`Event ${debugEvents[eventNumber]}:\n`, eventsStack[eventNumber],"\n");
+       }
+
+   }
+
+   $$.debug = new DebugHelper()
+
 }
 
 
