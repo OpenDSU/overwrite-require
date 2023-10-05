@@ -452,8 +452,8 @@ function enableForEnvironment(envType){
        }
 
        this.log = function(...args){
-           if(!debugEnabled) return;
            console.debug(...args);
+           if(!debugEnabled) return;
            debugEvents.push(`Log #${debugEvents.length}` +[...args].join(" "));
            eventsStack.push(getStackTrace());
        }
