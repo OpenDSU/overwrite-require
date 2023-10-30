@@ -209,6 +209,25 @@ function Logger(className, moduleName, logFile) {
         this[functions.TRACE] = this[functions.DEBUG] = () => {
         };
     }
+
+    this.ignoreErrorsWithCode = (code) => {
+        if (typeof code !== "number") {
+            throw new Error("Code must be a number");
+        }
+
+        const __generateFunction = (functionName) => {
+            return (...args) => {
+                const res = stripCodeFromArgs(...args);
+                if (res.code !== code) {
+                    printToConsoleAndFile(functionName, ...args);
+                } else {
+                    executeFunctionFromConsole(functions.LOG, ...args);
+                }
+            }
+        }
+        this.error = __generateFunction(functions.ERROR);
+        this.warn = __generateFunction(functions.WARN);
+    }
 }
 
 const getLogger = (className, moduleName, criticalLogFile) => {
