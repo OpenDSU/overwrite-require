@@ -4,7 +4,7 @@
  */
 function enableForEnvironment(envType){
 
-    const moduleConstants = require("./moduleConstants");
+    const moduleConstants = require("./src/moduleConstants");
 
     /**
      * Used to provide autocomplete for $$ variables
@@ -97,7 +97,7 @@ function enableForEnvironment(envType){
         $$.__runtimeModules[name] = module;
     }
 
-    $$.getLogger = require("./Logger").getLogger;
+    $$.getLogger = require("./src/Logger").getLogger;
 
     function wrapStep(callbackName) {
         const callback = global[callbackName];
@@ -291,7 +291,7 @@ function enableForEnvironment(envType){
         return newLoader;
     }
 
-    require("./standardGlobalSymbols.js");
+    require("./src/standardGlobalSymbols.js");
 
     if (typeof($$.require) == "undefined") {
 
@@ -472,15 +472,18 @@ function enableForEnvironment(envType){
            return console.log(`Event ${debugEvents[eventNumber]}:\n`, eventsStack[realNumber],"\n");
        }
 
+       this.useStdoutOnceForErrorWithCode = function(code){
+           const logger = $$.getLogger("overwrite-require", "index");
+           logger.useStdoutOnceForErrorWithCode(code);
+       }
    }
 
    $$.debug = new DebugHelper()
-
 }
 
 
 
 module.exports = {
     enableForEnvironment,
-    constants: require("./moduleConstants")
+    constants: require("./src/moduleConstants")
 };

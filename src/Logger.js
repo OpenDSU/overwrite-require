@@ -1,7 +1,7 @@
 const envTypes = require("./moduleConstants");
 const originalConsole = Object.assign({}, console);
 const IS_DEV_MODE = process.env.DEV === "true" || typeof process.env.DEV === "undefined";
-
+const errorTypes = require("./errorTypes");
 if (typeof process.env.OPENDSU_ENABLE_DEBUG === "undefined") {
     process.env.OPENDSU_ENABLE_DEBUG = IS_DEV_MODE.toString();
 }
@@ -31,8 +31,22 @@ function MemoryFileMock() {
     }
 }
 
+let verbosity;
+
 function Logger(className, moduleName, logFile) {
     const MAX_STRING_LENGTH = 11;
+
+    this.setClassName = (_className) => {
+        className = _className;
+    }
+
+    this.setModuleName = (_moduleName) => {
+        moduleName = _moduleName;
+    }
+
+    this.setCriticalLogFile = (_logFile) => {
+        logFile = _logFile;
+    }
     const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
         let noSpaces = Math.abs(maxLen - arg.length);
         let spaces = String(" ").repeat(noSpaces);
@@ -74,6 +88,7 @@ function Logger(className, moduleName, logFile) {
         }
         return msg;
     }
+
     const createLogObject = (functionName, code = 0, ...args) => {
         let message = "";
         for (let i = 0; i < args.length; i++) {
@@ -139,6 +154,7 @@ function Logger(className, moduleName, logFile) {
         }
     }
 
+    const functions = errorTypes;
     const getConsoleFunction = (functionName) => {
         if (functionName === functions.CRITICAL) {
             functionName = functions.ERROR;
@@ -186,17 +202,6 @@ function Logger(className, moduleName, logFile) {
         writeToFile(functionName, ...args);
     }
 
-    const functions = {
-        LOG: "log",
-        INFO: "info",
-        WARN: "warn",
-        TRACE: "trace",
-        DEBUG: "debug",
-        ERROR: "error",
-        CRITICAL: "critical",
-        AUDIT: "audit"
-    }
-
     for (let fnName in functions) {
         this[functions[fnName]] = (...args) => {
             printToConsoleAndFile(functions[fnName], ...args);
@@ -210,7 +215,11 @@ function Logger(className, moduleName, logFile) {
         };
     }
 
-    this.ignoreErrorsWithCode = (code) => {
+    const originalWarn = this.warn;
+    const originalError = this.error;
+
+
+    this.useStdoutOnceForErrorWithCode = (code) => {
         if (typeof code !== "number") {
             throw new Error("Code must be a number");
         }
@@ -223,6 +232,9 @@ function Logger(className, moduleName, logFile) {
                 } else {
                     executeFunctionFromConsole(functions.LOG, ...args);
                 }
+
+                this.warn = originalWarn;
+                this.error = originalError;
             }
         }
         this.error = __generateFunction(functions.ERROR);
@@ -231,7 +243,15 @@ function Logger(className, moduleName, logFile) {
 }
 
 const getLogger = (className, moduleName, criticalLogFile) => {
-    return new Logger(className, moduleName, criticalLogFile);
+    if(typeof $$.__logger === "undefined"){
+        $$.__logger = new Logger(className, moduleName, criticalLogFile);
+    }else{
+        $$.__logger.setClassName(className);
+        $$.__logger.setModuleName(moduleName);
+        $$.__logger.setCriticalLogFile(criticalLogFile);
+    }
+
+    return $$.__logger;
 }
 
 module.exports = {
