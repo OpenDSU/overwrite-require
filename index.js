@@ -381,7 +381,7 @@ function enableForEnvironment(envType){
         let asyncFunc = $$.promisify(func);
         return $$.callAsync(asyncFunc, ...args);
     }
- 
+
     $$.makeSaneCallback = function makeSaneCallback(fn) {
         let alreadyCalled = false;
         let prevErr;
@@ -475,6 +475,11 @@ function enableForEnvironment(envType){
        this.useStdoutOnceForErrorWithCode = function(code){
            const logger = $$.getLogger("overwrite-require", "index");
            logger.useStdoutOnceForErrorWithCode(code);
+       }
+
+       this.verbosity = function(level){
+          const logger = $$.getLogger("overwrite-require", "index");
+          logger.setVerbosityLevel(level);
        }
    }
 

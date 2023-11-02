@@ -31,10 +31,20 @@ function MemoryFileMock() {
     }
 }
 
-let verbosity;
 
 function Logger(className, moduleName, logFile) {
     const MAX_STRING_LENGTH = 11;
+    const verbosityLevels = {
+        "trace": 0,
+        "debug": 1,
+        "info": 2,
+        "log": 3,
+        "warn": 3,
+        "error": 4,
+        "critical": 5,
+        "audit": 6
+    }
+    let verbosity = verbosityLevels[process.env.OPENDSU_LOG_VERBOSITY] || verbosityLevels["trace"];
 
     this.setClassName = (_className) => {
         className = _className;
@@ -168,6 +178,9 @@ function Logger(className, moduleName, logFile) {
     }
 
     const executeFunctionFromConsole = (functionName, ...args) => {
+        if (verbosity > verbosityLevels[functionName]) {
+            return;
+        }
         if ($$.memoryLogger) {
             originalConsole[getConsoleFunction(functionName)](...args);
         } else {
@@ -239,6 +252,18 @@ function Logger(className, moduleName, logFile) {
         }
         this.error = __generateFunction(functions.ERROR);
         this.warn = __generateFunction(functions.WARN);
+    }
+
+    this.setVerbosityLevel = (level) => {
+        if (typeof level === "string") {
+            level = verbosityLevels[level];
+        }
+
+        if (typeof level !== "number") {
+            throw new Error("Verbosity level must be a number");
+        }
+
+        verbosity = level;
     }
 }
 
