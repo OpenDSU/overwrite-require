@@ -2,7 +2,7 @@
  require and $$.require are overwriting the node.js defaults in loading modules for increasing security, speed and making it work to the privatesky runtime build with browserify.
  The privatesky code for domains should work in node and browsers.
  */
-function enableForEnvironment(envType){
+function enableForEnvironment(envType) {
 
     const moduleConstants = require("./src/moduleConstants");
 
@@ -27,7 +27,7 @@ function enableForEnvironment(envType){
             Error.stackTraceLimit = Infinity;
     }
 
-    if (typeof(global.$$) == "undefined") {
+    if (typeof (global.$$) == "undefined") {
         /**
          * Used to provide autocomplete for $$ variables
          * @type {$$}
@@ -35,7 +35,7 @@ function enableForEnvironment(envType){
         global.$$ = {};
     }
 
-    if (typeof($$.__global) == "undefined") {
+    if (typeof ($$.__global) == "undefined") {
         $$.__global = {};
     }
 
@@ -43,7 +43,7 @@ function enableForEnvironment(envType){
         global.wprint = console.warn;
     }
     Object.defineProperty($$, "environmentType", {
-        get: function(){
+        get: function () {
             return envType;
         },
         set: function (value) {
@@ -52,18 +52,18 @@ function enableForEnvironment(envType){
     });
 
 
-    if (typeof($$.__global.requireLibrariesNames) == "undefined") {
+    if (typeof ($$.__global.requireLibrariesNames) == "undefined") {
         $$.__global.currentLibraryName = null;
         $$.__global.requireLibrariesNames = {};
     }
 
 
-    if (typeof($$.__runtimeModules) == "undefined") {
+    if (typeof ($$.__runtimeModules) == "undefined") {
         $$.__runtimeModules = {};
     }
 
 
-    if (typeof(global.functionUndefined) == "undefined") {
+    if (typeof (global.functionUndefined) == "undefined") {
         global.functionUndefined = function () {
             console.log("Called of an undefined function!!!!");
             throw new Error("Called of an undefined function");
@@ -96,8 +96,6 @@ function enableForEnvironment(envType){
     $$.__registerModule = function (name, module) {
         $$.__runtimeModules[name] = module;
     }
-
-    $$.getLogger = require("./src/Logger").getLogger;
 
     function wrapStep(callbackName) {
         const callback = global[callbackName];
@@ -156,13 +154,13 @@ function enableForEnvironment(envType){
 
             } catch (err) {
                 if (err.type !== "PSKIgnorableError") {
-                    if(err instanceof SyntaxError){
+                    if (err instanceof SyntaxError) {
                         console.error(err);
-                    } else{
-                        if(request === 'zeromq'){
-                            console.warn("Failed to load module ", request," with error:", err.message);
-                        }else{
-                            console.error("Failed to load module ", request," with error:", err);
+                    } else {
+                        if (request === 'zeromq') {
+                            console.warn("Failed to load module ", request, " with error:", err.message);
+                        } else {
+                            console.error("Failed to load module ", request, " with error:", err);
                         }
                     }
                     //$$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
@@ -182,7 +180,7 @@ function enableForEnvironment(envType){
         return result;
     }
 
-    function makeBrowserRequire(){
+    function makeBrowserRequire() {
         console.log("Defining global require in browser");
 
 
@@ -193,7 +191,7 @@ function enableForEnvironment(envType){
         }
     }
 
-    function makeIsolateRequire(){
+    function makeIsolateRequire() {
         // require should be provided when code is loaded in browserify
         //const bundleRequire = require;
 
@@ -240,7 +238,7 @@ function enableForEnvironment(envType){
         global.require = newLoader;
     }
 
-    function makeNodeJSRequire(){
+    function makeNodeJSRequire() {
         const pathModuleName = 'path';
         const path = require(pathModuleName);
         const cryptoModuleName = 'crypto';
@@ -271,7 +269,7 @@ function enableForEnvironment(envType){
                 } catch (err) {
                     if (err.code === "MODULE_NOT_FOUND") {
                         let pathOrName = request;
-                        if(pathOrName.startsWith('/') || pathOrName.startsWith('./') || pathOrName.startsWith('../')){
+                        if (pathOrName.startsWith('/') || pathOrName.startsWith('./') || pathOrName.startsWith('../')) {
                             pathOrName = path.join(process.cwd(), request);
                         }
                         res = moduleOriginalRequire.call(self, pathOrName);
@@ -293,7 +291,7 @@ function enableForEnvironment(envType){
 
     require("./src/standardGlobalSymbols.js");
 
-    if (typeof($$.require) == "undefined") {
+    if (typeof ($$.require) == "undefined") {
 
         $$.__requireList = ["webshimsRequire"];
         $$.__requireFunctionsChain = [];
@@ -319,9 +317,9 @@ function enableForEnvironment(envType){
                 makeBrowserRequire();
                 $$.require = require;
                 let possibleRedirects = [301, 302];
-                $$.httpUnknownResponseGlobalHandler = function(res){
+                $$.httpUnknownResponseGlobalHandler = function (res) {
                     console.log("Global handler for unknown http errors was called", res.status, res);
-                    if(res.status && possibleRedirects.indexOf(res.status)!==-1){
+                    if (res.status && possibleRedirects.indexOf(res.status) !== -1) {
                         window.location = "/";
                         return;
                     }
@@ -340,7 +338,7 @@ function enableForEnvironment(envType){
                 $$.require = require;
                 break;
             default:
-               $$.require = makeNodeJSRequire();
+                $$.require = makeNodeJSRequire();
         }
 
     }
@@ -367,11 +365,11 @@ function enableForEnvironment(envType){
         return promisifiedFn;
     };
 
-   $$.callAsync = async function (func, ...args) {
+    $$.callAsync = async function (func, ...args) {
         let error, result;
         try {
-            result =  await func(...args);
-        } catch(err) {
+            result = await func(...args);
+        } catch (err) {
             error = err
         }
         return [error, result];
@@ -385,7 +383,7 @@ function enableForEnvironment(envType){
     $$.makeSaneCallback = function makeSaneCallback(fn) {
         let alreadyCalled = false;
         let prevErr;
-        if(fn.alreadyWrapped){
+        if (fn.alreadyWrapped) {
             return fn;
         }
 
@@ -398,7 +396,7 @@ function enableForEnvironment(envType){
                 throw new Error(`Callback called 2 times! Second call was stopped. Function code:\n${fn.toString()}\n` + (prevErr ? `Previous error stack ${prevErr.toString()}` : ''));
             }
             alreadyCalled = true;
-            if(err){
+            if (err) {
                 prevErr = err;
             }
             return fn(err, res, ...args);
@@ -408,84 +406,98 @@ function enableForEnvironment(envType){
         return newFn;
     };
 
-   function DebugHelper(){
-       let debugEnabled = false;
-       let debugEvents = [];
-       let eventsStack = [];
+    function DebugHelper() {
+        let debugEnabled = false;
+        let debugEvents = [];
+        let eventsStack = [];
 
-       function getStackTrace(){
-              return new Error().stack;
-       }
-       this.start = function(){
-           debugEnabled = true;
-       }
+        function getStackTrace() {
+            return new Error().stack;
+        }
 
-       this.resume = this.start;
+        this.start = function () {
+            debugEnabled = true;
+        }
 
-       this.reset =function(){
-           debugEnabled = true;
-           let debugEvents = [];
-           let eventsStack = [];
-       }
+        this.resume = this.start;
 
-       this.stop = function(){
-           debugEnabled = false;
-       }
+        this.reset = function () {
+            debugEnabled = true;
+            let debugEvents = [];
+            let eventsStack = [];
+        }
 
-       this.logDSUEvent = function(dsu, ...args){
-            if(!debugEnabled) return;
+        this.stop = function () {
+            debugEnabled = false;
+        }
+
+        this.logDSUEvent = function (dsu, ...args) {
+            if (!debugEnabled) return;
 
             let anchorID, dsuInstanceUID;
-            try{
+            try {
                 anchorID = dsu.getAnchorIdSync();
-                anchorID = anchorID.substring(4, 27)+"...";
-            } catch(err){
+                anchorID = anchorID.substring(4, 27) + "...";
+            } catch (err) {
                 anchorID = "N/A";
             }
 
-           try{
-               dsuInstanceUID = dsu.getInstanceUID();
-           } catch(err){
-               dsuInstanceUID = "N/A";
-           }
+            try {
+                dsuInstanceUID = dsu.getInstanceUID();
+            } catch (err) {
+                dsuInstanceUID = "N/A";
+            }
             this.log(`[${anchorID}][${dsuInstanceUID}]`, ...args);
-       }
+        }
 
-       this.log = function(...args){
-           console.debug(...args);
-           if(!debugEnabled) return;
-           debugEvents.push(`Log #${debugEvents.length}` +[...args].join(" "));
-           eventsStack.push(getStackTrace());
-       }
+        this.log = function (...args) {
+            console.debug(...args);
+            if (!debugEnabled) return;
+            debugEvents.push(`Log #${debugEvents.length}` + [...args].join(" "));
+            eventsStack.push(getStackTrace());
+        }
 
-       this.logs = function(){
+        this.logs = function () {
             console.log(`${debugEvents.length} events logged`);
             console.log(debugEvents.join("\n"));
-       }
+        }
 
-       this.context = function(eventNumber){
-           let realNumber = eventNumber;
-           if(typeof eventNumber == "string"){
-               eventNumber = eventNumber.slice(1);
-               realNumber = parseInt(eventNumber);
-           }
-           return console.log(`Event ${debugEvents[eventNumber]}:\n`, eventsStack[realNumber],"\n");
-       }
+        this.context = function (eventNumber) {
+            let realNumber = eventNumber;
+            if (typeof eventNumber == "string") {
+                eventNumber = eventNumber.slice(1);
+                realNumber = parseInt(eventNumber);
+            }
+            return console.log(`Event ${debugEvents[eventNumber]}:\n`, eventsStack[realNumber], "\n");
+        }
 
-       this.useStdoutOnceForErrorWithCode = function(code){
-           const logger = $$.getLogger("overwrite-require", "index");
-           logger.useStdoutOnceForErrorWithCode(code);
-       }
+        const errorCodesForStdout = new Set();
 
-       this.verbosity = function(level){
-          const logger = $$.getLogger("overwrite-require", "index");
-          logger.setVerbosityLevel(level);
-       }
-   }
+        this.useStdoutOnceForErrorWithCode = function (code) {
+            errorCodesForStdout.add(code);
+        }
 
-   $$.debug = new DebugHelper()
+        this.errorWithCodeShouldBeRedirectedToStdout = function (code) {
+            if (errorCodesForStdout.has(code)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        let verbosityLevel;
+        this.verbosity = function (level) {
+            verbosityLevel = level;
+        }
+
+        this.getVerbosityLevel = function () {
+           return verbosityLevel;
+        }
+    }
+
+    $$.debug = new DebugHelper();
+    $$.getLogger = require("./src/Logger").getLogger;
 }
-
 
 
 module.exports = {

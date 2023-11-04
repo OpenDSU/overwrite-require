@@ -44,19 +44,10 @@ function Logger(className, moduleName, logFile) {
         "critical": 5,
         "audit": 6
     }
-    let verbosity = verbosityLevels[process.env.OPENDSU_LOG_VERBOSITY] || verbosityLevels["trace"];
 
-    this.setClassName = (_className) => {
-        className = _className;
-    }
+    let verbosity;
 
-    this.setModuleName = (_moduleName) => {
-        moduleName = _moduleName;
-    }
 
-    this.setCriticalLogFile = (_logFile) => {
-        logFile = _logFile;
-    }
     const getPaddingForArg = (arg, maxLen = MAX_STRING_LENGTH) => {
         let noSpaces = Math.abs(maxLen - arg.length);
         let spaces = String(" ").repeat(noSpaces);
@@ -178,6 +169,12 @@ function Logger(className, moduleName, logFile) {
     }
 
     const executeFunctionFromConsole = (functionName, ...args) => {
+        if (typeof $$.debug !== "undefined" && typeof $$.debug.getVerbosityLevel === "function") {
+            verbosity = verbosityLevels[$$.debug.getVerbosityLevel()];
+        } else {
+            verbosity = verbosityLevels["trace"];
+        }
+
         if (verbosity > verbosityLevels[functionName]) {
             return;
         }
@@ -230,53 +227,31 @@ function Logger(className, moduleName, logFile) {
 
     const originalWarn = this.warn;
     const originalError = this.error;
+    const originalTrace = this.trace;
 
-
-    this.useStdoutOnceForErrorWithCode = (code) => {
-        if (typeof code !== "number") {
-            throw new Error("Code must be a number");
-        }
-
+    if ($$.debug && typeof $$.debug.errorWithCodeShouldBeRedirectedToStdout === "function") {
         const __generateFunction = (functionName) => {
             return (...args) => {
                 const res = stripCodeFromArgs(...args);
-                if (res.code !== code) {
-                    printToConsoleAndFile(functionName, ...args);
+                if ($$.debug.errorWithCodeShouldBeRedirectedToStdout(res.code)) {
+                    executeFunctionFromConsole(functions.DEBUG, ...args);
                 } else {
-                    executeFunctionFromConsole(functions.LOG, ...args);
+                    printToConsoleAndFile(functionName, ...args);
                 }
 
                 this.warn = originalWarn;
                 this.error = originalError;
+                this.trace = originalTrace;
             }
         }
         this.error = __generateFunction(functions.ERROR);
         this.warn = __generateFunction(functions.WARN);
-    }
-
-    this.setVerbosityLevel = (level) => {
-        if (typeof level === "string") {
-            level = verbosityLevels[level];
-        }
-
-        if (typeof level !== "number") {
-            throw new Error("Verbosity level must be a number");
-        }
-
-        verbosity = level;
+        this.trace = __generateFunction(functions.TRACE);
     }
 }
 
 const getLogger = (className, moduleName, criticalLogFile) => {
-    if(typeof $$.__logger === "undefined"){
-        $$.__logger = new Logger(className, moduleName, criticalLogFile);
-    }else{
-        $$.__logger.setClassName(className);
-        $$.__logger.setModuleName(moduleName);
-        $$.__logger.setCriticalLogFile(criticalLogFile);
-    }
-
-    return $$.__logger;
+    return new Logger(className, moduleName, criticalLogFile);
 }
 
 module.exports = {
