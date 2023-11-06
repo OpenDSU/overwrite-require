@@ -477,6 +477,12 @@ function enableForEnvironment(envType) {
             errorCodesForStdout.add(code);
         }
 
+        this.useStderrForErrorWithCode = function (code) {
+            if (errorCodesForStdout.has(code)) {
+                errorCodesForStdout.delete(code);
+            }
+        }
+
         this.errorWithCodeShouldBeRedirectedToStdout = function (code) {
             if (errorCodesForStdout.has(code)) {
                 return true;
@@ -491,7 +497,7 @@ function enableForEnvironment(envType) {
         }
 
         this.getVerbosityLevel = function () {
-           return verbosityLevel;
+            return verbosityLevel;
         }
     }
 

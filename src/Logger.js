@@ -235,18 +235,25 @@ function Logger(className, moduleName, logFile) {
                 const res = stripCodeFromArgs(...args);
                 if ($$.debug.errorWithCodeShouldBeRedirectedToStdout(res.code)) {
                     executeFunctionFromConsole(functions.DEBUG, ...args);
+                    $$.debug.useStderrForErrorWithCode(res.code);
+                    this.warn = originalWarn;
+                    this.error = originalError;
+                    this.trace = originalTrace;
+                    console.error = this.error;
+                    console.warn = this.warn;
+                    console.trace = this.trace;
                 } else {
                     printToConsoleAndFile(functionName, ...args);
                 }
-
-                this.warn = originalWarn;
-                this.error = originalError;
-                this.trace = originalTrace;
             }
         }
         this.error = __generateFunction(functions.ERROR);
         this.warn = __generateFunction(functions.WARN);
         this.trace = __generateFunction(functions.TRACE);
+
+        console.error = this.error;
+        console.warn = this.warn;
+        console.trace = this.trace;
     }
 }
 
