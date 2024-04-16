@@ -200,6 +200,8 @@ function enableForEnvironment(envType) {
         const sandboxRequire = global.require;
         const cryptoModuleName = 'crypto';
         global.crypto = require(cryptoModuleName);
+        const pathModuleName = 'path';
+        const path = require(pathModuleName);
 
         function newLoader(request) {
             // console.log("newLoader:", request);
@@ -321,7 +323,7 @@ function enableForEnvironment(envType) {
                     console.log("Global handler for unknown http errors was called", res.status, res);
                     if (res.status && possibleRedirects.indexOf(res.status) !== -1) {
                         window.location = "/";
-                        return;
+
                     }
                 };
                 break;
@@ -423,8 +425,8 @@ function enableForEnvironment(envType) {
 
         this.reset = function () {
             debugEnabled = true;
-            let debugEvents = [];
-            let eventsStack = [];
+            debugEvents = [];
+            eventsStack = [];
         }
 
         this.stop = function () {

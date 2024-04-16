@@ -1,6 +1,6 @@
 let logger = console;
 
-if(typeof $$.Buffer === "undefined"){
+if (typeof $$.Buffer === "undefined") {
     $$.Buffer = require("buffer").Buffer;
 }
 
@@ -20,10 +20,10 @@ if (!global.process || process.env.NO_LOGS !== 'true') {
 
         console.log('Logger init successful', process.pid);
     } catch (e) {
-        if(e.message.indexOf("psklogger")!==-1 || e.message.indexOf("zeromq")!==-1){
+        if (e.message.indexOf("psklogger") !== -1 || e.message.indexOf("zeromq") !== -1) {
             console.log('Logger not available, using console');
             logger = console;
-        }else{
+        } else {
             console.log(e);
         }
     }
@@ -42,7 +42,7 @@ $$.registerGlobalSymbol = function (newSymbol, value) {
     }
 };
 
-console.warn = (...args)=>{
+console.warn = (...args) => {
     console.log(...args);
 };
 
@@ -100,7 +100,7 @@ $$.registerGlobalSymbol("fixMe", function (...args) {
  * @param {string} message
  * @param {*} type
  */
-$$.registerGlobalSymbol("exception", function (message, type) {
+$$.registerGlobalSymbol("exception", function (message) {
     throw new Error(message);
 });
 
@@ -110,7 +110,7 @@ $$.registerGlobalSymbol("exception", function (message, type) {
  * @param {string} message
  * @param {*} type
  */
-$$.registerGlobalSymbol("throw", function (message, type) {
+$$.registerGlobalSymbol("throw", function (message) {
     throw new Error(message);
 });
 
@@ -155,7 +155,7 @@ $$.registerGlobalSymbol("assert", function (value, explainWhy) {
  * @param {*} value
  */
 /* enable/disabale flags that control psk behaviour*/
-$$.registerGlobalSymbol("flags", function (flagName, value) {
+$$.registerGlobalSymbol("flags", function () {
     $$.incomplete("flags handling not implemented");
 });
 
@@ -232,9 +232,9 @@ $$.registerGlobalSymbol("warn", function (...args) {
 $$.registerGlobalSymbol("syntaxError", function (...args) {
     args.unshift("Syntax error:");
     logger.error(...args);
-    try{
+    try {
         throw new Error("Syntax error or misspelled symbol!");
-    }catch(err){
+    } catch (err) {
         console.error(...args);
         console.error(err.stack);
     }
@@ -290,7 +290,7 @@ $$.registerGlobalSymbol("event", function (event, ...args) {
     if (logger.hasOwnProperty('event')) {
         logger.event(event, ...args);
     } else {
-        if(event === "status.domains.boot"){
+        if (event === "status.domains.boot") {
             console.log("Failing to console...", event, ...args);
         }
     }
@@ -303,7 +303,7 @@ $$.registerGlobalSymbol("event", function (event, ...args) {
  * @param {...*} args
  */
 $$.registerGlobalSymbol("redirectLog", function (logType, logObject) {
-    if(logger.hasOwnProperty('redirect')) {
+    if (logger.hasOwnProperty('redirect')) {
         logger.redirect(logType, logObject);
     }
 });
