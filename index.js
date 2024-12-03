@@ -163,7 +163,7 @@ function enableForEnvironment(envType) {
                             console.error("Failed to load module ", request, " with error:", err);
                         }
                     }
-                    //$$.err("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
+                    console.log("Require encountered an error while loading ", request, "\nCause:\n", err.stack);
                 }
             }
         }
